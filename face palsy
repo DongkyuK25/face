@@ -1,0 +1,393 @@
+!pip install git+https://github.com/rcmalli/keras-vggface.git
+!pip install mtcnn
+from matplotlib import pyplot
+from PIL import Image
+from numpy import asarray
+from mtcnn.mtcnn import MTCNN
+import os
+import numpy as np
+import cv2
+# extract a single face from a given photograph
+data_path = '/content/drive/MyDrive/png/2/'
+global j 
+image_rows = 224  
+image_cols = 224   
+
+train_data_path = os.path.join(data_path)
+
+image_file_names = os.listdir(train_data_path)
+
+total = len(image_file_names)
+
+imgs = np.ndarray((total, image_rows, image_cols), dtype=np.uint8)
+
+i = 0
+print('-'*30)
+print('Creating training images...')
+print('-'*30)
+for image_name in image_file_names:
+    file_name = os.path.join(train_data_path, image_name)
+    print (file_name)
+    
+
+def extract_face(filename, required_size=(224, 224)):
+	# load image from file
+	pixels = pyplot.imread(filename)
+	# create the detector, using default weights
+	detector = MTCNN()
+	# detect faces in the image
+	results = detector.detect_faces(pixels)
+	# extract the bounding box from the first face
+	x1, y1, width, height = results[0]['box']
+	x2, y2 = x1 + width, y1 + height
+	# extract the face
+	face = pixels[y1:y2, x1:x2]
+	# resize pixels to the model size
+	image = Image.fromarray(face)
+	image = image.resize(required_size)
+	face_array = asarray(image)
+	return face_array
+ 
+# load the photo and extract the face
+for image_name in image_file_names:
+		j=0
+		pixels = extract_face(image_name)
+# plot the extracted face
+		pyplot.imshow(pixels)
+		j+=1
+# show the plot
+		pyplot.show()
+  	
+		cv2.imwrite(f'/content/drive/MyDrive/png/3/image_{j-1}.jpg',pixels)
+    
+import sys
+import os
+import dlib
+import glob
+import cv2  
+from google.colab.patches import cv2_imshow
+
+
+!pip install dlib
+!pip install numpy
+
+j = 1
+def swapRGB2BGR(rgb):
+    r, g, b = cv2.split(img)
+    bgr = cv2.merge([b,g,r])
+    return bgr
+
+predictor_path = '/content/drive/MyDrive/abc/shape_predictor_68_face_landmarks.dat'
+
+faces_folder_path = '/content/drive/MyDrive/Atest/1/'
+
+detector = dlib.get_frontal_face_detector()
+
+predictor = dlib.shape_predictor(predictor_path)
+
+for f in glob.glob(os.path.join(faces_folder_path, "*.jpg")):
+    print("Processing file: {}".format(f))
+    
+    img = dlib.load_rgb_image(f)      
+   
+    cvImg = swapRGB2BGR(img)    
+    
+    dets = detector(img, 1)
+
+   
+    print("Number of faces detected: {}".format(len(dets)))
+    
+  
+    for k, d in enumerate(dets):
+        global j 
+        j+=1
+        
+        print("Detection {}: Left: {} Top: {} Right: {} Bottom: {}".format(
+            k, d.left(), d.top(), d.right(), d.bottom()))
+
+       
+        shape = predictor(img, d)
+        print(shape.num_parts)
+       
+        for i in range(0, shape.num_parts):
+          
+            x = shape.part(i).x
+            y = shape.part(i).y
+
+           
+            print(str(x) + " " + str(y))
+
+           
+            cv2.circle(cvImg, (x, y), 2, (0, 255, 0),-1)
+            
+        
+        cv2.imwrite(f'/content/drive/MyDrive/Atest/2/image_{j-1}.jpg',cvImg)    
+        
+        print ("j=",j)       
+        cv2_imshow(cvImg)
+           
+
+
+import os
+import numpy as np
+import cv2
+all_image='/content/drive/MyDrive/image1/west0428.npy'
+all_image_label='/content/drive/MyDrive/image1/west0428_labels.npy'
+load_all_img = np.load(all_image)
+load_all_img_label = np.load(all_image_label)
+all_img1=load_all_img
+all_img_label1=load_all_img_label
+random_index = np.random.choice(all_img1.shape[0], all_img1.shape[0], replace=False)
+
+size_80 = int(0.8*all_img1.shape[0])
+
+train_imgs = all_img1[random_index[:size_80]]
+train_labels = all_img_label1[random_index[:size_80]]
+test_imgs = all_img1[random_index[size_80:]]
+test_labels = all_img_label1[random_index[size_80:]]
+
+from google.colab.patches import cv2_imshow
+print (train_labels[0])
+cv2_imshow(train_imgs[0])
+
+print (test_labels[5])
+cv2_imshow(test_imgs[5])
+print (train_labels[10])
+cv2_imshow(train_imgs[10])
+
+print (test_labels[15])
+cv2_imshow(test_imgs[15])
+print (train_labels[20])
+cv2_imshow(train_imgs[20])
+
+print (test_labels[25])
+cv2_imshow(test_imgs[25])
+print (train_labels[30])
+cv2_imshow(train_imgs[30])
+
+print (test_labels[35])
+cv2_imshow(test_imgs[35])
+print (train_labels[40])
+cv2_imshow(train_imgs[40])
+
+print (test_labels[45])
+cv2_imshow(test_imgs[45])
+
+
+from tensorflow.keras.datasets import cifar10
+from tensorflow.keras.datasets import mnist
+from tensorflow.keras.utils import to_categorical
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv2D, MaxPooling2D
+from tensorflow.keras.layers import Dense, Dropout, Activation, Flatten
+from tensorflow.keras.applications.resnet_v2 import ResNet50V2
+from tensorflow.keras.applications import EfficientNetB0
+from tensorflow.keras.optimizers import Adam
+from keras.preprocessing import image
+from keras.applications.vgg16 import preprocess_input
+from keras.layers import Input, Flatten, Dense
+from keras.models import Model
+import numpy as np
+from keras.layers import BatchNormalization
+
+img_size = 128
+ch=1
+
+
+
+
+train_imgs = train_imgs.reshape(train_imgs.shape[0], img_size, img_size, ch)
+test_imgs = test_imgs.reshape(test_imgs.shape[0], img_size, img_size, ch)
+
+print (train_imgs.shape)  # (60000, 28, 28, 1)
+
+import cv2
+
+
+from google.colab.patches import cv2_imshow
+
+
+train_imgs = train_imgs.astype('float32')
+test_imgs = test_imgs.astype('float32')
+train_imgs /= 255
+test_imgs /= 255
+
+print (train_labels.shape)  
+
+train_labels = to_categorical(train_labels, 2)
+test_labels = to_categorical(test_labels, 2)
+
+print (train_labels.shape)
+
+random_index1 = np.random.choice(train_imgs.shape[0], train_imgs.shape[0], replace=False)
+import keras
+size_80a = int(0.8*train_imgs.shape[0])
+Val_Imgs = train_imgs[random_index1[size_80a:] ]
+Val_Labels = train_labels[random_index1[size_80a:] ]
+Train_Imgs = train_imgs[random_index1[:size_80a] ]
+Train_Labels = train_labels[random_index1[:size_80a] ]
+Test_Imgs = test_imgs[:] 
+Test_Labels = test_labels[:] 
+print (Val_Imgs.shape)
+print (Train_Imgs.shape)
+print (Test_Imgs.shape)
+print (Train_Labels.shape).
+model = Sequential()
+
+model.add(Conv2D(32, (3,3), activation='relu',padding='same', input_shape=(img_size,img_size,ch)))
+model.add(BatchNormalization())
+model.add(MaxPooling2D(pool_size=(2,2)))
+model.add(BatchNormalization())
+model.add(Conv2D(64, (3,3), activation='relu',padding='same' ))
+model.add(BatchNormalization())
+model.add(Conv2D(128, (3,3), activation='relu', padding='same'))
+model.add(BatchNormalization())
+model.add(MaxPooling2D(pool_size=(2,2)))
+model.add(BatchNormalization())
+model.add(Conv2D(64, (3,3), activation='relu', padding='same'))
+model.add(BatchNormalization())
+model.add(Flatten()) 
+model.add(BatchNormalization())
+model.add(Dense(1024, activation='relu')) 
+model.add(BatchNormalization()) 
+model.add(Dropout(0.5))
+model.add(Dense(1024, activation='relu')) 
+model.add(BatchNormalization()) 
+model.add(Dropout(0.5))
+model.add(Dense(2, activation='softmax'))
+
+model.compile(optimizer=Adam(lr=0.000005),loss='categorical_crossentropy', metrics=['accuracy'])
+
+model.summary()
+
+print ('model fit...')
+epoch =75
+history = model.fit(Train_Imgs, Train_Labels, batch_size=16, epochs=epoch, 
+            validation_data=(Val_Imgs, Val_Labels))
+
+score = model.evaluate(Test_Imgs, Test_Labels, verbose=0)
+print("%.2f%%" % (score[1]*100))
+
+history_dict = history.history
+loss_values = history_dict['loss']
+val_loss_values = history_dict['val_loss']
+acc_values = history_dict['accuracy']
+val_acc_values = history_dict['val_accuracy']
+print (loss_values)
+print (val_loss_values)
+
+epochs = range(1, epoch + 1)
+from matplotlib import pyplot as plt
+plt.plot(epochs, loss_values, 'b-', label='Training loss')
+plt.plot(epochs, val_loss_values, 'g-', label='Validation loss')
+plt.plot(epochs, acc_values, 'b+', label='Training acc')
+plt.plot(epochs, val_acc_values, 'g+', label='Validation acc')
+plt.title('Training and validation loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend()
+face = '/content/drive/MyDrive/face palsy/face palsy.h5'
+plt.show()
+model.save('/content/drive/MyDrive/mix0502.h5')
+
+from tensorflow.python.keras.utils import np_utils
+import matplotlib.pyplot as plt 
+from sklearn.preprocessing import LabelBinarizer
+from sklearn.metrics import roc_curve, auc, roc_auc_score
+import matplotlib.pyplot as plt 
+from sklearn.preprocessing import LabelBinarizer
+from sklearn.metrics import roc_curve, auc, roc_auc_score
+
+from tensorflow.python.keras.models import Sequential
+from tensorflow.python.keras.layers import Dense, Activation
+import numpy as np
+from numpy import argmax
+from tensorflow.keras.utils import to_categorical
+from sklearn.metrics import confusion_matrix
+from sklearn.datasets import load_iris
+from sklearn.metrics import accuracy_score, auc, roc_auc_score, roc_curve
+from sklearn.preprocessing import label_binarize
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+import matplotlib.pyplot as plt
+import pandas as pd
+
+x_test = '/content/drive/MyDrive/image1/Desk.npy'
+y_test = '/content/drive/MyDrive/image1/Desk_labels.npy'
+load_all_img = np.load(x_test)
+load_all_img_label = np.load(y_test)
+all_img1=load_all_img
+all_img_label1=load_all_img_label
+print ("x_test0 = ",load_all_img.shape)
+test_imgs = all_img1.reshape(all_img1.shape[0], 128, 128, 1)
+test_imgs = test_imgs.astype('float32')
+test_imgs /= 255
+all_img_label1 = to_categorical(all_img_label1, 2)
+random_index1 = np.random.choice(test_imgs.shape[0], test_imgs.shape[0], replace=False)
+Test_Imgs = test_imgs[random_index1[:] ]
+Test_Labels = all_img_label1[random_index1[:] ]
+Test = np.transpose(Test_Labels)
+print("Test = ",Test,"//1")
+
+
+from keras.models import load_model
+e=0
+percent = np.zeros((5), dtype=np.uint8)
+for k in range(0,1):
+  j=0
+  global e 
+  random_index2 = np.random.choice(Test_Imgs.shape[0], Test_Imgs.shape[0], replace=False)
+  xhat = Test_Imgs[:]
+  face = '/content/drive/MyDrive/mix0502.h5'
+  model = load_model(face)
+  predict_x=model.predict(xhat) 
+  classes_x=np.argmax(predict_x,axis=1)
+  
+  # function for scoring roc auc score for multi-class
+  print ("classes_x = " ,classes_x,"//2")
+# roc_auc_score:  0.9302675881623251
+  target= ['0', '1']
+
+# set plot figure size
+  fig, c_ax = plt.subplots(1,1, figsize = (12, 8))
+
+# function for scoring roc auc score for multi-class
+  def multiclass_roc_auc_score(y_test, y_pred):
+    lb = LabelBinarizer()
+    lb.fit(y_test)
+    y_test = np.argmax(y_test, axis = 1)
+    
+   
+    
+    #y_pred = y_pred.flatten()
+    #y_pred = lb.transform(y_pred)
+    
+    print("y_test = ", y_test)
+    print("y_pred = ", y_pred)
+
+    for (idx, c_label) in enumerate(target):
+        fpr, tpr, thresholds = roc_curve(y_test, y_pred)
+        c_ax.plot(fpr, tpr, label = '%s (AUC:%0.2f)'  % (c_label, auc(fpr, tpr)))
+    c_ax.plot(fpr, fpr, 'b-', label = 'Random Guessing')
+    return roc_auc_score(y_test, y_pred)
+
+
+  print('ROC AUC score:', multiclass_roc_auc_score(Test_Labels, classes_x))
+
+  c_ax.legend()
+  c_ax.set_xlabel('False Positive Rate')
+  c_ax.set_ylabel('True Positive Rate')
+  plt.show()
+  for i in range(0,Test_Imgs.shape[0]):
+    print('True : ' + str(argmax(Test_Labels[i])) + ', Predict : ' + str(classes_x[i]))
+    if (str(argmax(Test_Labels[i]))== str(classes_x[i])):
+       
+       j+=1
+       per = j
+ 
+  print ('accuracy = ',per*(100.0/Test_Imgs.shape[0]) )
+  print (per)
+  percent[e]=per*(100.0/Test_Imgs.shape[0])
+  e+=1
+  print ("percent = ",percent[:])
+       
